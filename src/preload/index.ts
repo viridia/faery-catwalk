@@ -4,7 +4,6 @@ import { contextBridge, ipcRenderer } from 'electron';
 import { domReady } from './utils';
 import { useLoading } from './loading';
 
-// const isDev = process.env.NODE_ENV === 'development';
 // eslint-disable-next-line react-hooks/rules-of-hooks
 const { appendLoading, removeLoading } = useLoading();
 
@@ -33,7 +32,8 @@ function withPrototype(obj: Record<string, any>) {
     if (Object.prototype.hasOwnProperty.call(obj, key)) continue;
 
     if (typeof value === 'function') {
-      // Some native API not work in Renderer-process, like `NodeJS.EventEmitter['on']`. Wrap a function patch it.
+      // Some native APIs do not work in Renderer-process, like `NodeJS.EventEmitter['on']`.
+      // Wrap a function patch it.
       obj[key] = function (...args: any) {
         return value.call(obj, ...args);
       };

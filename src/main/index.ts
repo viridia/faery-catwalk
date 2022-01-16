@@ -2,6 +2,7 @@ import os from 'os';
 import { join } from 'path';
 import { app, dialog, ipcMain, BrowserWindow } from 'electron';
 import { SavedWindowState, store } from './store';
+import chokidar, { FSWatcher } from 'chokidar';
 
 const isWin7 = os.release().startsWith('6.1');
 if (isWin7) app.disableHardwareAcceleration();
@@ -12,12 +13,13 @@ if (!app.requestSingleInstanceLock()) {
 }
 
 let win: BrowserWindow | null = null;
+let watcher: FSWatcher | null = null;
 
 async function createWindow() {
   const { isMaximized, x, y, width, height } = (await store.get('window')) as SavedWindowState;
 
   win = new BrowserWindow({
-    title: 'Main window',
+    title: 'Catwalk',
     webPreferences: {
       preload: join(__dirname, '../preload/index.cjs'),
     },
@@ -73,16 +75,14 @@ async function createWindow() {
       });
   });
 
-  ipcMain.handle('open-save-as', (event, path) => {
-    return dialog
-      .showSaveDialog(win!, {
-        properties: ['createDirectory', 'showOverwriteConfirmation'],
-        defaultPath: path,
-        title: 'Save model file',
-      })
-      .then(result => {
-        return result.filePath;
-      });
+  ipcMain.on('watch', (event, path) => {
+    if (watcher) {
+      watcher.close();
+    }
+    watcher = chokidar.watch(path);
+    watcher.on('change', path => {
+      win?.webContents.send('watch-change', path);
+    });
   });
 }
 

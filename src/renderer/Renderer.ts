@@ -9,21 +9,18 @@ import {
   AnimationClip,
   AnimationMixer,
 } from 'three';
-import { ResourcePool } from './ResourcePool';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils';
 
 export class Renderer {
   private scene = new Scene();
   private camera: PerspectiveCamera;
   private renderer: WebGLRenderer;
-  private pool = new ResourcePool();
   private frameId: number | null = null;
-  private cameraAngle: number = 0;
+  private cameraAngle: number = Math.PI;
   private resizeObserver = new ResizeObserver(this.handleResize.bind(this));
   private armature: Object3D | null = null;
   private mixer: AnimationMixer | null = null;
   private time: number | undefined = undefined;
-  private animation: AnimationClip | null = null;
 
   constructor(private mount: HTMLElement) {
     this.animate = this.animate.bind(this);
@@ -58,7 +55,6 @@ export class Renderer {
     this.resizeObserver.unobserve(this.mount);
     this.renderer.domElement.removeEventListener('wheel', this.handleWheel);
     this.mount.removeChild(this.renderer.domElement);
-    this.pool.dispose();
   }
 
   public display(

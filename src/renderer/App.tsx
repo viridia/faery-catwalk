@@ -14,8 +14,9 @@ import {
 import { Renderer } from './Renderer';
 import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { List } from './List';
-import { Group, Object3D } from 'three';
+import { AnimationClip, Group, Object3D } from 'three';
 import { TreeView } from './TreeView';
+import { IpcRendererEvent } from 'electron';
 
 function App() {
   const [elt, setElt] = useState<HTMLElement | null>(null);
@@ -25,6 +26,7 @@ function App() {
   const [showTree, setShowTree] = useState(false);
   const [skins, setSkins] = useState<Object3D[]>([]);
   const [armature, setArmature] = useState<Object3D | null>(null);
+  const [clips, setClips] = useState<AnimationClip[]>([]);
   const [selectedSkin, setSelectedSkin] = useState('');
   const [selectedAnimation, setSelectedAnimation] = useState('');
   // const [canDrop, setCanDrop] = useState(false);
@@ -48,30 +50,62 @@ function App() {
     }
   }, [gltf, renderer, selectedAnimation, selectedSkin, armature]);
 
+  // Code to load the model file.
+  const loadFile = useCallback((filePath: string) => {
+    const data = window.bridge.fs.readFileSync(filePath);
+    const loader = new GLTFLoader();
+    loader.load(
+      URL.createObjectURL(new Blob([data])),
+      gltf => {
+        setGltf(gltf);
+        setSkins(gltf.scene?.children.filter(child => child instanceof Group) ?? []);
+        setClips(gltf.animations);
+        setArmature(gltf.scene?.children.find(child => child.name.match(/armature/i)) ?? null);
+      },
+      undefined,
+      error => {
+        console.error(error);
+      }
+    );
+  }, []);
+
+  // Reload the file whenever it gets modified on disk.
+  useEffect(() => {
+    const watcher = (event: IpcRendererEvent, path: string) => {
+      console.log('path changed', path);
+      if (path === filePath) {
+        loadFile(filePath);
+      }
+    };
+    const dirName = window.bridge.path.dirname(filePath);
+    window.bridge.ipcRenderer.send('watch', dirName);
+    window.bridge.ipcRenderer.on('watch-change', watcher);
+    return () => {
+      window.bridge.ipcRenderer.off('watch-change', watcher);
+    };
+  }, [filePath, loadFile]);
+
+  // Open the file browser and load the model file.
   const onOpenFile = useCallback(() => {
     window.bridge.ipcRenderer.invoke('open-file').then((filePath: string) => {
       setFilePath(filePath);
-      const data = window.bridge.fs.readFileSync(filePath);
-      const loader = new GLTFLoader();
-      loader.load(
-        URL.createObjectURL(new Blob([data])),
-        gltf => {
-          setGltf(gltf);
-          const skins = gltf.scene?.children.filter(child => child instanceof Group) ?? [];
-          setSkins(skins);
-          setSelectedSkin(skins.length > 0 ? skins[0].name : '');
-          const firstClip = gltf.animations[0];
-          setSelectedAnimation(firstClip ? firstClip.name : '');
-          const armature = gltf.scene?.children.find(child => child.name.match(/armature/i));
-          setArmature(armature ?? null);
-        },
-        undefined,
-        error => {
-          console.error(error);
-        }
-      );
+      loadFile(filePath);
     });
-  }, []);
+  }, [loadFile]);
+
+  // If there's no skin with the name of the selected skin, then set it to the first skin.
+  useEffect(() => {
+    if (!skins.find(sk => sk.name === selectedSkin)) {
+      setSelectedSkin(skins[0]?.name ?? '');
+    }
+  }, [selectedSkin, skins]);
+
+  // If there's no animation with the name of the selected animation, then set it to the first.
+  useEffect(() => {
+    if (!clips.find(sk => sk.name === selectedAnimation)) {
+      setSelectedAnimation(clips[0]?.name ?? '');
+    }
+  }, [clips, selectedAnimation]);
 
   return (
     <div className={pageClass}>
@@ -86,10 +120,14 @@ function App() {
           <div className={noFilePathClass}>No file selected</div>
         )}
         <label className={labelClass}>
-          <input type="checkbox" checked={showTree} onChange={e => {
-            e.preventDefault();
-            setShowTree(e.currentTarget.checked);
-          }} />
+          <input
+            type="checkbox"
+            checked={showTree}
+            onChange={e => {
+              e.preventDefault();
+              setShowTree(e.currentTarget.checked);
+            }}
+          />
           Tree
         </label>
       </header>
@@ -98,17 +136,16 @@ function App() {
           <div className={sidebarClass}>
             <List
               title="Skins"
-              items={skins
-                .map(child => ({
-                  name: child.name,
-                  value: child.name,
-                }))}
+              items={skins.map(child => ({
+                name: child.name,
+                value: child.name,
+              }))}
               selected={selectedSkin}
               onChange={selected => setSelectedSkin(selected)}
             />
             <List
               title="AnimationClips"
-              items={gltf.animations.map(clip => ({
+              items={clips.map(clip => ({
                 name: clip.name,
                 value: clip.name,
               }))}

@@ -9,6 +9,7 @@
   "author": "Talin <viridia@gmail.com>",
   "dependencies": {
     "@vanilla-extract/css": "^1.6.8",
+    "chokidar": "^3.5.2",
     "clsx": "^1.1.1",
     "electron": "^16.0.7",
     "electron-builder": "^22.14.5",

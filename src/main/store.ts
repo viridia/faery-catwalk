@@ -1,5 +1,6 @@
 import Store from 'electron-store';
 
+// Schema for storing window position.
 export const store = new Store({
   schema: {
     window: {

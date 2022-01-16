@@ -2,10 +2,10 @@ process.env.NODE_ENV = 'development'
 
 import electron from 'electron'
 import { spawn } from 'child_process'
-import { createRequire } from 'module'
+// import { createRequire } from 'module'
 import { createServer, build as viteBuild } from 'vite'
 
-const require = createRequire(import.meta.url)
+// const require = createRequire(import.meta.url)
 const pkg = require('../package.json')
 
 /**
