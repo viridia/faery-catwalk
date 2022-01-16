@@ -22,6 +22,7 @@ export const store = new Store({
           type: 'boolean',
         },
       },
+      required: [],
       additionalProperties: false,
     },
   },

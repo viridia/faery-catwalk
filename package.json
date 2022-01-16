@@ -4,7 +4,7 @@
   "description": "Character model previewing app.",
   "main": "dist/main/index.cjs",
   "scripts": {
-    "start": "node scripts/watch.mjs"
+    "start": "node --experimental-json-modules scripts/watch.mjs"
   },
   "author": "Talin <viridia@gmail.com>",
   "dependencies": {

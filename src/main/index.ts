@@ -16,7 +16,8 @@ let win: BrowserWindow | null = null;
 let watcher: FSWatcher | null = null;
 
 async function createWindow() {
-  const { isMaximized, x, y, width, height } = (await store.get('window')) as SavedWindowState;
+  const { isMaximized, x, y, width, height } =
+    ((await store.get('window')) as SavedWindowState) ?? {};
 
   win = new BrowserWindow({
     title: 'Catwalk',

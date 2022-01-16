@@ -1,12 +1,13 @@
-process.env.NODE_ENV = 'development'
+process.env.NODE_ENV = 'development';
 
-import electron from 'electron'
-import { spawn } from 'child_process'
+import electron from 'electron';
+import { spawn } from 'child_process';
 // import { createRequire } from 'module'
-import { createServer, build as viteBuild } from 'vite'
+import { createServer, build as viteBuild } from 'vite';
 
 // const require = createRequire(import.meta.url)
-const pkg = require('../package.json')
+import * as pkg from '../package.json' assert { type: 'json' };
+// const pkg = require('../package.json')
 
 /**
  * @param {{ name: string; configFile: string; writeBundle: import('rollup').OutputPlugin['writeBundle'] }} param0
@@ -21,7 +22,7 @@ function getWatcher({ name, configFile, writeBundle }) {
     },
     configFile,
     plugins: [{ name, writeBundle }],
-  })
+  });
 }
 
 /**
@@ -31,7 +32,7 @@ async function watchMain() {
   /**
    * @type {import('child_process').ChildProcessWithoutNullStreams | null}
    */
-  let electronProcess = null
+  let electronProcess = null;
 
   /**
    * @type {import('rollup').RollupWatcher}
@@ -40,15 +41,15 @@ async function watchMain() {
     name: 'electron-main-watcher',
     configFile: 'config/vite.main.ts',
     writeBundle() {
-      electronProcess && electronProcess.kill()
+      electronProcess && electronProcess.kill();
       electronProcess = spawn(electron, ['.'], {
         stdio: 'inherit',
         env: Object.assign(process.env, pkg.env),
-      })
+      });
     },
-  })
+  });
 
-  return watcher
+  return watcher;
 }
 
 /**
@@ -62,16 +63,16 @@ async function watchPreload(viteDevServer) {
     writeBundle() {
       viteDevServer.ws.send({
         type: 'full-reload',
-      })
+      });
     },
-  })
+  });
 }
 
 // bootstrap
 const viteDevServer = await createServer({
   configFile: 'config/vite.renderer.ts',
-})
+});
 
-await viteDevServer.listen()
-await watchPreload(viteDevServer)
-await watchMain()
+await viteDevServer.listen();
+await watchPreload(viteDevServer);
+await watchMain();
