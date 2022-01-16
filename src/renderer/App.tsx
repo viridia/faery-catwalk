@@ -29,6 +29,10 @@ function App() {
   const [clips, setClips] = useState<AnimationClip[]>([]);
   const [selectedSkin, setSelectedSkin] = useState('');
   const [selectedAnimation, setSelectedAnimation] = useState('');
+  const [dragState] = useState({
+    pointerId: -1,
+    isDragging: false,
+  });
   // const [canDrop, setCanDrop] = useState(false);
 
   // We can't construct the renderer until we have an element to attach it to.
@@ -107,6 +111,27 @@ function App() {
     }
   }, [clips, selectedAnimation]);
 
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
+    if (dragState.isDragging) {
+      renderer?.rotateCamera(-e.movementX / 100);
+    }
+  }, [dragState, renderer]);
+
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
+    console.log('down');
+    dragState.isDragging = true;
+    dragState.pointerId = e.pointerId;
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }, [dragState]);
+
+  const onPointerUp = useCallback((e: React.PointerEvent) => {
+    if (dragState.isDragging) {
+      e.currentTarget.releasePointerCapture(dragState.pointerId);
+      dragState.isDragging = false;
+      dragState.pointerId = -1;
+    }
+  }, [dragState]);
+
   return (
     <div className={pageClass}>
       <header className={pageHeaderClass}>
@@ -154,7 +179,13 @@ function App() {
             />
           </div>
         )}
-        <div className={viewClass} ref={setElt}>
+        <div
+          className={viewClass}
+          ref={setElt}
+          onPointerDown={onPointerDown}
+          onPointerUp={onPointerUp}
+          onPointerMove={onPointerMove}
+        >
           {!gltf && <div className={messageClass}>Nothing loaded</div>}
           {gltf && showTree && <TreeView obj={gltf.scene} />}
         </div>

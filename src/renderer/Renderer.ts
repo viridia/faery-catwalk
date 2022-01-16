@@ -57,6 +57,12 @@ export class Renderer {
     this.mount.removeChild(this.renderer.domElement);
   }
 
+  public rotateCamera(deltaAngle: number) {
+    this.cameraAngle -= deltaAngle;
+    this.cameraAngle = this.cameraAngle % (Math.PI * 2);
+    this.sceneChanged();
+  }
+
   public display(
     skin: Object3D | undefined,
     armature: Object3D | null,
