@@ -8,6 +8,7 @@ import {
   Object3D,
   AnimationClip,
   AnimationMixer,
+  AnimationAction,
 } from 'three';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils';
 
@@ -21,6 +22,8 @@ export class Renderer {
   private armature: Object3D | null = null;
   private mixer: AnimationMixer | null = null;
   private time: number | undefined = undefined;
+  private animationSpeed = 1;
+  private currentAction: AnimationAction | null = null;
 
   constructor(private mount: HTMLElement) {
     this.animate = this.animate.bind(this);
@@ -63,6 +66,10 @@ export class Renderer {
     this.sceneChanged();
   }
 
+  public setAnimationSpeed(speed: number) {
+    this.animationSpeed = speed;
+  }
+
   public display(
     skin: Object3D | undefined,
     armature: Object3D | null,
@@ -81,7 +88,12 @@ export class Renderer {
       this.mixer = new AnimationMixer(this.armature!);
       if (clip) {
         const action = this.mixer.clipAction(clip);
+        // if (this.currentAction && (clip.name === 'Run' || clip.name === 'Walk')) {
+        //   action.crossFadeFrom(this.currentAction, 0.1, false);
+        // } else {
+        // }
         action.play();
+        this.currentAction = action;
       }
     }
     this.sceneChanged();
@@ -107,7 +119,7 @@ export class Renderer {
     const delta = this.time === undefined ? 0 : (time - this.time) / 1000;
     this.time = time;
     if (this.mixer) {
-      this.mixer.update(delta);
+      this.mixer.update(delta * this.animationSpeed);
     }
     this.render();
     this.frameId = window.requestAnimationFrame(this.animate);

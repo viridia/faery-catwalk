@@ -17,6 +17,7 @@ import { List } from './List';
 import { AnimationClip, Group, Object3D } from 'three';
 import { TreeView } from './TreeView';
 import { IpcRendererEvent } from 'electron';
+import { listHeaderClass } from './List.css';
 
 function App() {
   const [elt, setElt] = useState<HTMLElement | null>(null);
@@ -29,6 +30,7 @@ function App() {
   const [clips, setClips] = useState<AnimationClip[]>([]);
   const [selectedSkin, setSelectedSkin] = useState('');
   const [selectedAnimation, setSelectedAnimation] = useState('');
+  const [animationSpeed, setAnimationSpeed] = useState(1);
   const [dragState] = useState({
     pointerId: -1,
     isDragging: false,
@@ -53,6 +55,12 @@ function App() {
       renderer.display(model, armature, clip);
     }
   }, [gltf, renderer, selectedAnimation, selectedSkin, armature]);
+
+  useEffect(() => {
+    if (renderer) {
+      renderer.setAnimationSpeed(animationSpeed);
+    }
+  }, [animationSpeed, renderer]);
 
   // Code to load the model file.
   const loadFile = useCallback((filePath: string) => {
@@ -111,26 +119,35 @@ function App() {
     }
   }, [clips, selectedAnimation]);
 
-  const onPointerMove = useCallback((e: React.PointerEvent) => {
-    if (dragState.isDragging) {
-      renderer?.rotateCamera(-e.movementX / 100);
-    }
-  }, [dragState, renderer]);
+  const onPointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      if (dragState.isDragging) {
+        renderer?.rotateCamera(-e.movementX / 100);
+      }
+    },
+    [dragState, renderer]
+  );
 
-  const onPointerDown = useCallback((e: React.PointerEvent) => {
-    console.log('down');
-    dragState.isDragging = true;
-    dragState.pointerId = e.pointerId;
-    e.currentTarget.setPointerCapture(e.pointerId);
-  }, [dragState]);
+  const onPointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      console.log('down');
+      dragState.isDragging = true;
+      dragState.pointerId = e.pointerId;
+      e.currentTarget.setPointerCapture(e.pointerId);
+    },
+    [dragState]
+  );
 
-  const onPointerUp = useCallback((e: React.PointerEvent) => {
-    if (dragState.isDragging) {
-      e.currentTarget.releasePointerCapture(dragState.pointerId);
-      dragState.isDragging = false;
-      dragState.pointerId = -1;
-    }
-  }, [dragState]);
+  const onPointerUp = useCallback(
+    (e: React.PointerEvent) => {
+      if (dragState.isDragging) {
+        e.currentTarget.releasePointerCapture(dragState.pointerId);
+        dragState.isDragging = false;
+        dragState.pointerId = -1;
+      }
+    },
+    [dragState]
+  );
 
   return (
     <div className={pageClass}>
@@ -176,6 +193,18 @@ function App() {
               }))}
               selected={selectedAnimation}
               onChange={selected => setSelectedAnimation(selected)}
+            />
+            <div style={{ flex: 1 }} />
+            <header className={listHeaderClass}>Speed</header>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.1}
+              value={animationSpeed}
+              onChange={e => {
+                setAnimationSpeed(e.currentTarget.valueAsNumber);
+              }}
             />
           </div>
         )}
