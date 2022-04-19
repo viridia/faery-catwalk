@@ -11,6 +11,7 @@ export const listHeaderClass = style({
   fontSize: '14px',
   fontWeight: 'bold',
   padding: '4px 0',
+  flexShrink: 0,
 });
 
 export const listItemClass = style({

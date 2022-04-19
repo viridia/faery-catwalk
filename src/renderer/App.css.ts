@@ -70,6 +70,28 @@ export const sidebarClass = style({
   display: 'flex',
   flexDirection: 'column',
   padding: '4px 8px',
+  overflowY: 'auto',
+
+  selectors: {
+    '&::-webkit-scrollbar': {
+      backgroundColor: 'transparent',
+      width: 7,
+      height: 7,
+    },
+
+    '&::-webkit-scrollbar-thumb': {
+      backgroundColor: 'rgba(0, 0, 0, 0.2)',
+      borderRadius: 6,
+    },
+
+    '&::-webkit-scrollbar-thumb:window-inactive': {
+      backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    },
+
+    '&::-webkit-scrollbar-corner': {
+      backgroundColor: 'transparent',
+    },
+  },
 });
 
 export const buttonClass = style({
